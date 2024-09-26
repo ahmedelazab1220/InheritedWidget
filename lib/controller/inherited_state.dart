@@ -1,4 +1,7 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:inheritedwidget/model/app_state.dart';
 
 class StateWidget extends StatefulWidget {
   final Widget child;
@@ -12,18 +15,29 @@ class StateWidget extends StatefulWidget {
 }
 
 class _StateWidgetState extends State<StateWidget> {
-  var counter = 0;
-
+  var appState = AppState();
+  ValueNotifier<Color> colorNotifier = ValueNotifier<Color>(Colors.blue);
   void incrementCounter() {
+    final newState = appState.copyWith(counter: appState.counter + 1);
     setState(() {
-      counter++;
+      appState = newState;
+    });
+  }
+
+  void changeColor(MaterialColor color) {
+    final newState = appState.copyWith(color: color);
+
+    setState(() {
+      log('Selected color: ${color.toString()}');
+      colorNotifier.value = color;
+      appState = newState;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return StateInheritedWidget(
-      counter: counter,
+      appState: appState,
       stateWidget: this,
       child: widget.child,
     );
@@ -31,13 +45,13 @@ class _StateWidgetState extends State<StateWidget> {
 }
 
 class StateInheritedWidget extends InheritedWidget {
-  final int counter;
+  final AppState appState;
   final _StateWidgetState stateWidget;
 
   const StateInheritedWidget({
     super.key,
     required super.child,
-    this.counter = 0,
+    required this.appState,
     required this.stateWidget,
   });
 
@@ -47,6 +61,9 @@ class StateInheritedWidget extends InheritedWidget {
 
   @override
   bool updateShouldNotify(covariant StateInheritedWidget oldWidget) {
-    return oldWidget.counter != counter;
+    if (oldWidget.stateWidget != stateWidget) {
+      log("Update Should Notify");
+    }
+    return oldWidget.appState != appState;
   }
 }
